@@ -47,12 +47,21 @@ parameters {
   //  END of code generated for missing data
   // ------------------------------------------------------------
 
+  real mu_x;
+  real<lower=0.01> sigma_x;
   real intercept;
   real slope;
   real<lower=0.01> error;
 }
 
 model {
+  for (i in 1:N) {
+    if (x__is_missing[i]) {
+      x__missing[x__missing_data_index[i]] ~ normal(mu_x, sigma_x);
+    } else {
+      x__not_missing[x__missing_data_index[i]] ~ normal(mu_x, sigma_x);
+    }
+  }
   for (i in 1:N) {
     if (x__is_missing[i]) {
       if (y__is_missing[i]) {

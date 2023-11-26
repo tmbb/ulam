@@ -8,28 +8,37 @@ using namespace stan::math;
 
 
 stan::math::profile_map profiles__;
-static constexpr std::array<const char*, 40> locations_array__ = 
+static constexpr std::array<const char*, 49> locations_array__ = 
 {" (found before start of program)",
  " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 36, column 2 to column 35)",
  " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 45, column 2 to column 35)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 50, column 2 to column 17)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 51, column 2 to column 13)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 52, column 2 to column 25)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 67, column 8 to column 127)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 66, column 13 to line 68, column 7)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 65, column 8 to column 123)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 64, column 28 to line 66, column 7)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 64, column 6 to line 68, column 7)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 63, column 11 to line 69, column 5)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 61, column 8 to column 123)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 60, column 13 to line 62, column 7)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 59, column 8 to column 119)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 58, column 28 to line 60, column 7)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 58, column 6 to line 62, column 7)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 57, column 26 to line 63, column 5)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 57, column 4 to line 69, column 5)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 56, column 17 to line 70, column 3)",
- " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 56, column 2 to line 70, column 3)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 50, column 2 to column 12)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 51, column 2 to column 27)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 52, column 2 to column 17)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 53, column 2 to column 13)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 54, column 2 to column 25)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 62, column 6 to column 71)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 61, column 11 to line 63, column 5)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 60, column 6 to column 67)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 59, column 26 to line 61, column 5)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 59, column 4 to line 63, column 5)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 58, column 17 to line 64, column 3)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 58, column 2 to line 64, column 3)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 76, column 8 to column 127)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 75, column 13 to line 77, column 7)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 74, column 8 to column 123)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 73, column 28 to line 75, column 7)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 73, column 6 to line 77, column 7)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 72, column 11 to line 78, column 5)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 70, column 8 to column 123)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 69, column 13 to line 71, column 7)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 68, column 8 to column 119)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 67, column 28 to line 69, column 7)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 67, column 6 to line 71, column 7)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 66, column 26 to line 72, column 5)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 66, column 4 to line 78, column 5)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 65, column 17 to line 79, column 3)",
+ " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 65, column 2 to line 79, column 3)",
  " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 2, column 2 to column 17)",
  " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 7, column 2 to column 38)",
  " (in '/home/tmbb/Projects/sideprojects/python/ulam/ulam_models/example.stan', line 8, column 2 to column 42)",
@@ -95,82 +104,82 @@ class example_model final : public model_base_crtp<example_model> {
     try {
       int pos__ = std::numeric_limits<int>::min();
       pos__ = 1;
-      current_statement__ = 21;
+      current_statement__ = 30;
       context__.validate_dims("data initialization","N","int",
            std::vector<size_t>{});
       N = std::numeric_limits<int>::min();
       
       
-      current_statement__ = 21;
+      current_statement__ = 30;
       N = context__.vals_i("N")[(1 - 1)];
-      current_statement__ = 21;
+      current_statement__ = 30;
       stan::math::check_greater_or_equal(function__, "N", N, 0);
-      current_statement__ = 22;
+      current_statement__ = 31;
       context__.validate_dims("data initialization","N__x__missing","int",
            std::vector<size_t>{});
       N__x__missing = std::numeric_limits<int>::min();
       
       
-      current_statement__ = 22;
+      current_statement__ = 31;
       N__x__missing = context__.vals_i("N__x__missing")[(1 - 1)];
-      current_statement__ = 22;
+      current_statement__ = 31;
       stan::math::check_greater_or_equal(function__, "N__x__missing",
                                             N__x__missing, 0);
-      current_statement__ = 22;
+      current_statement__ = 31;
       stan::math::check_less_or_equal(function__, "N__x__missing",
                                          N__x__missing, N);
-      current_statement__ = 23;
+      current_statement__ = 32;
       context__.validate_dims("data initialization","N__x__not_missing",
           "int", std::vector<size_t>{});
       N__x__not_missing = std::numeric_limits<int>::min();
       
       
-      current_statement__ = 23;
+      current_statement__ = 32;
       N__x__not_missing = context__.vals_i("N__x__not_missing")[(1 - 1)];
-      current_statement__ = 23;
+      current_statement__ = 32;
       stan::math::check_greater_or_equal(function__, "N__x__not_missing",
                                             N__x__not_missing, 0);
-      current_statement__ = 23;
+      current_statement__ = 32;
       stan::math::check_less_or_equal(function__, "N__x__not_missing",
                                          N__x__not_missing, N);
-      current_statement__ = 24;
+      current_statement__ = 33;
       stan::math::validate_non_negative_index("x__is_missing", "N", N);
-      current_statement__ = 25;
+      current_statement__ = 34;
       context__.validate_dims("data initialization","x__is_missing","int",
            std::vector<size_t>{static_cast<size_t>(N)});
       x__is_missing = std::vector<int>(N, std::numeric_limits<int>::min());
       
       
-      current_statement__ = 25;
+      current_statement__ = 34;
       x__is_missing = context__.vals_i("x__is_missing");
-      current_statement__ = 25;
+      current_statement__ = 34;
       stan::math::check_greater_or_equal(function__, "x__is_missing",
                                             x__is_missing, 0);
-      current_statement__ = 25;
+      current_statement__ = 34;
       stan::math::check_less_or_equal(function__, "x__is_missing",
                                          x__is_missing, 1);
-      current_statement__ = 26;
+      current_statement__ = 35;
       stan::math::validate_non_negative_index("x__missing_data_index", "N", N);
-      current_statement__ = 27;
+      current_statement__ = 36;
       context__.validate_dims("data initialization","x__missing_data_index",
           "int", std::vector<size_t>{static_cast<size_t>(N)});
       x__missing_data_index = 
         std::vector<int>(N, std::numeric_limits<int>::min());
       
       
-      current_statement__ = 27;
+      current_statement__ = 36;
       x__missing_data_index = context__.vals_i("x__missing_data_index");
-      current_statement__ = 27;
+      current_statement__ = 36;
       stan::math::check_greater_or_equal(function__, "x__missing_data_index",
                                             x__missing_data_index, 0);
-      current_statement__ = 27;
+      current_statement__ = 36;
       stan::math::check_less_or_equal(function__, "x__missing_data_index",
                                          x__missing_data_index, N);
-      current_statement__ = 28;
+      current_statement__ = 37;
       stan::math::validate_non_negative_index("x__not_missing",
                                               "N__x__not_missing",
                                               N__x__not_missing);
-      current_statement__ = 29;
+      current_statement__ = 38;
       context__.validate_dims("data initialization","x__not_missing",
           "double",
            std::vector<size_t>{static_cast<size_t>(N__x__not_missing)});
@@ -182,86 +191,86 @@ class example_model final : public model_base_crtp<example_model> {
       
       {
         std::vector<local_scalar_t__> x__not_missing_flat__;
-        current_statement__ = 29;
+        current_statement__ = 38;
         x__not_missing_flat__ = context__.vals_r("x__not_missing");
-        current_statement__ = 29;
+        current_statement__ = 38;
         pos__ = 1;
-        current_statement__ = 29;
+        current_statement__ = 38;
         for (int sym1__ = 1; sym1__ <= N__x__not_missing; ++sym1__) {
-          current_statement__ = 29;
+          current_statement__ = 38;
           stan::model::assign(x__not_missing,
             x__not_missing_flat__[(pos__ - 1)],
             "assigning variable x__not_missing", stan::model::index_uni(sym1__));
-          current_statement__ = 29;
+          current_statement__ = 38;
           pos__ = (pos__ + 1);
         }
       }
-      current_statement__ = 30;
+      current_statement__ = 39;
       context__.validate_dims("data initialization","N__y__missing","int",
            std::vector<size_t>{});
       N__y__missing = std::numeric_limits<int>::min();
       
       
-      current_statement__ = 30;
+      current_statement__ = 39;
       N__y__missing = context__.vals_i("N__y__missing")[(1 - 1)];
-      current_statement__ = 30;
+      current_statement__ = 39;
       stan::math::check_greater_or_equal(function__, "N__y__missing",
                                             N__y__missing, 0);
-      current_statement__ = 30;
+      current_statement__ = 39;
       stan::math::check_less_or_equal(function__, "N__y__missing",
                                          N__y__missing, N);
-      current_statement__ = 31;
+      current_statement__ = 40;
       context__.validate_dims("data initialization","N__y__not_missing",
           "int", std::vector<size_t>{});
       N__y__not_missing = std::numeric_limits<int>::min();
       
       
-      current_statement__ = 31;
+      current_statement__ = 40;
       N__y__not_missing = context__.vals_i("N__y__not_missing")[(1 - 1)];
-      current_statement__ = 31;
+      current_statement__ = 40;
       stan::math::check_greater_or_equal(function__, "N__y__not_missing",
                                             N__y__not_missing, 0);
-      current_statement__ = 31;
+      current_statement__ = 40;
       stan::math::check_less_or_equal(function__, "N__y__not_missing",
                                          N__y__not_missing, N);
-      current_statement__ = 32;
+      current_statement__ = 41;
       stan::math::validate_non_negative_index("y__is_missing", "N", N);
-      current_statement__ = 33;
+      current_statement__ = 42;
       context__.validate_dims("data initialization","y__is_missing","int",
            std::vector<size_t>{static_cast<size_t>(N)});
       y__is_missing = std::vector<int>(N, std::numeric_limits<int>::min());
       
       
-      current_statement__ = 33;
+      current_statement__ = 42;
       y__is_missing = context__.vals_i("y__is_missing");
-      current_statement__ = 33;
+      current_statement__ = 42;
       stan::math::check_greater_or_equal(function__, "y__is_missing",
                                             y__is_missing, 0);
-      current_statement__ = 33;
+      current_statement__ = 42;
       stan::math::check_less_or_equal(function__, "y__is_missing",
                                          y__is_missing, 1);
-      current_statement__ = 34;
+      current_statement__ = 43;
       stan::math::validate_non_negative_index("y__missing_data_index", "N", N);
-      current_statement__ = 35;
+      current_statement__ = 44;
       context__.validate_dims("data initialization","y__missing_data_index",
           "int", std::vector<size_t>{static_cast<size_t>(N)});
       y__missing_data_index = 
         std::vector<int>(N, std::numeric_limits<int>::min());
       
       
-      current_statement__ = 35;
+      current_statement__ = 44;
       y__missing_data_index = context__.vals_i("y__missing_data_index");
-      current_statement__ = 35;
+      current_statement__ = 44;
       stan::math::check_greater_or_equal(function__, "y__missing_data_index",
                                             y__missing_data_index, 0);
-      current_statement__ = 35;
+      current_statement__ = 44;
       stan::math::check_less_or_equal(function__, "y__missing_data_index",
                                          y__missing_data_index, N);
-      current_statement__ = 36;
+      current_statement__ = 45;
       stan::math::validate_non_negative_index("y__not_missing",
                                               "N__y__not_missing",
                                               N__y__not_missing);
-      current_statement__ = 37;
+      current_statement__ = 46;
       context__.validate_dims("data initialization","y__not_missing",
           "double",
            std::vector<size_t>{static_cast<size_t>(N__y__not_missing)});
@@ -273,30 +282,30 @@ class example_model final : public model_base_crtp<example_model> {
       
       {
         std::vector<local_scalar_t__> y__not_missing_flat__;
-        current_statement__ = 37;
+        current_statement__ = 46;
         y__not_missing_flat__ = context__.vals_r("y__not_missing");
-        current_statement__ = 37;
+        current_statement__ = 46;
         pos__ = 1;
-        current_statement__ = 37;
+        current_statement__ = 46;
         for (int sym1__ = 1; sym1__ <= N__y__not_missing; ++sym1__) {
-          current_statement__ = 37;
+          current_statement__ = 46;
           stan::model::assign(y__not_missing,
             y__not_missing_flat__[(pos__ - 1)],
             "assigning variable y__not_missing", stan::model::index_uni(sym1__));
-          current_statement__ = 37;
+          current_statement__ = 46;
           pos__ = (pos__ + 1);
         }
       }
-      current_statement__ = 38;
+      current_statement__ = 47;
       stan::math::validate_non_negative_index("x__missing", "N__x__missing",
                                               N__x__missing);
-      current_statement__ = 39;
+      current_statement__ = 48;
       stan::math::validate_non_negative_index("y__missing", "N__y__missing",
                                               N__y__missing);
     } catch (const std::exception& e) {
       stan::lang::rethrow_located(e, locations_array__[current_statement__]);
     }
-    num_params_r__ = N__x__missing + N__y__missing + 1 + 1 + 1;
+    num_params_r__ = N__x__missing + N__y__missing + 1 + 1 + 1 + 1 + 1;
     
   }
   
@@ -330,26 +339,59 @@ class example_model final : public model_base_crtp<example_model> {
       current_statement__ = 2;
       y__missing = in__.template read<
                      Eigen::Matrix<local_scalar_t__, -1, 1>>(N__y__missing);
-      local_scalar_t__ intercept = DUMMY_VAR__;
+      local_scalar_t__ mu_x = DUMMY_VAR__;
       current_statement__ = 3;
+      mu_x = in__.template read<local_scalar_t__>();
+      local_scalar_t__ sigma_x = DUMMY_VAR__;
+      current_statement__ = 4;
+      sigma_x = in__.template read_constrain_lb<local_scalar_t__, 
+                  jacobian__>(0.01, lp__);
+      local_scalar_t__ intercept = DUMMY_VAR__;
+      current_statement__ = 5;
       intercept = in__.template read<local_scalar_t__>();
       local_scalar_t__ slope = DUMMY_VAR__;
-      current_statement__ = 4;
+      current_statement__ = 6;
       slope = in__.template read<local_scalar_t__>();
       local_scalar_t__ error = DUMMY_VAR__;
-      current_statement__ = 5;
+      current_statement__ = 7;
       error = in__.template read_constrain_lb<local_scalar_t__, jacobian__>(
                 0.01, lp__);
       {
-        current_statement__ = 20;
+        current_statement__ = 14;
         for (int i = 1; i <= N; ++i) {
-          current_statement__ = 18;
+          current_statement__ = 12;
           if (stan::model::rvalue(x__is_missing, "x__is_missing",
                 stan::model::index_uni(i))) {
-            current_statement__ = 16;
+            current_statement__ = 10;
+            lp_accum__.add(
+              stan::math::normal_lpdf<propto__>(
+                stan::model::rvalue(x__missing, "x__missing",
+                  stan::model::index_uni(stan::model::rvalue(
+                                           x__missing_data_index,
+                                           "x__missing_data_index",
+                                           stan::model::index_uni(i)))),
+                mu_x, sigma_x));
+          } else {
+            current_statement__ = 8;
+            lp_accum__.add(
+              stan::math::normal_lpdf<propto__>(
+                stan::model::rvalue(x__not_missing, "x__not_missing",
+                  stan::model::index_uni(stan::model::rvalue(
+                                           x__missing_data_index,
+                                           "x__missing_data_index",
+                                           stan::model::index_uni(i)))),
+                mu_x, sigma_x));
+          }
+        }
+        current_statement__ = 29;
+        for (int i = 1; i <= N; ++i) {
+          current_statement__ = 27;
+          if (stan::model::rvalue(x__is_missing, "x__is_missing",
+                stan::model::index_uni(i))) {
+            current_statement__ = 25;
             if (stan::model::rvalue(y__is_missing, "y__is_missing",
                   stan::model::index_uni(i))) {
-              current_statement__ = 14;
+              current_statement__ = 23;
               lp_accum__.add(
                 stan::math::normal_lpdf<propto__>(
                   stan::model::rvalue(y__missing, "y__missing",
@@ -364,7 +406,7 @@ class example_model final : public model_base_crtp<example_model> {
                                                stan::model::index_uni(i)))) *
                      slope) + intercept), error));
             } else {
-              current_statement__ = 12;
+              current_statement__ = 21;
               lp_accum__.add(
                 stan::math::normal_lpdf<propto__>(
                   stan::model::rvalue(y__not_missing, "y__not_missing",
@@ -380,10 +422,10 @@ class example_model final : public model_base_crtp<example_model> {
                      slope) + intercept), error));
             }
           } else {
-            current_statement__ = 10;
+            current_statement__ = 19;
             if (stan::model::rvalue(y__is_missing, "y__is_missing",
                   stan::model::index_uni(i))) {
-              current_statement__ = 8;
+              current_statement__ = 17;
               lp_accum__.add(
                 stan::math::normal_lpdf<propto__>(
                   stan::model::rvalue(y__missing, "y__missing",
@@ -398,7 +440,7 @@ class example_model final : public model_base_crtp<example_model> {
                                                stan::model::index_uni(i)))) *
                      slope) + intercept), error));
             } else {
-              current_statement__ = 6;
+              current_statement__ = 15;
               lp_accum__.add(
                 stan::math::normal_lpdf<propto__>(
                   stan::model::rvalue(y__not_missing, "y__not_missing",
@@ -460,18 +502,27 @@ class example_model final : public model_base_crtp<example_model> {
       current_statement__ = 2;
       y__missing = in__.template read<
                      Eigen::Matrix<local_scalar_t__, -1, 1>>(N__y__missing);
-      double intercept = std::numeric_limits<double>::quiet_NaN();
+      double mu_x = std::numeric_limits<double>::quiet_NaN();
       current_statement__ = 3;
+      mu_x = in__.template read<local_scalar_t__>();
+      double sigma_x = std::numeric_limits<double>::quiet_NaN();
+      current_statement__ = 4;
+      sigma_x = in__.template read_constrain_lb<local_scalar_t__, 
+                  jacobian__>(0.01, lp__);
+      double intercept = std::numeric_limits<double>::quiet_NaN();
+      current_statement__ = 5;
       intercept = in__.template read<local_scalar_t__>();
       double slope = std::numeric_limits<double>::quiet_NaN();
-      current_statement__ = 4;
+      current_statement__ = 6;
       slope = in__.template read<local_scalar_t__>();
       double error = std::numeric_limits<double>::quiet_NaN();
-      current_statement__ = 5;
+      current_statement__ = 7;
       error = in__.template read_constrain_lb<local_scalar_t__, jacobian__>(
                 0.01, lp__);
       out__.write(x__missing);
       out__.write(y__missing);
+      out__.write(mu_x);
+      out__.write(sigma_x);
       out__.write(intercept);
       out__.write(slope);
       out__.write(error);
@@ -519,6 +570,12 @@ class example_model final : public model_base_crtp<example_model> {
           "assigning variable y__missing", stan::model::index_uni(sym1__));
       }
       out__.write(y__missing);
+      local_scalar_t__ mu_x = DUMMY_VAR__;
+      mu_x = in__.read<local_scalar_t__>();
+      out__.write(mu_x);
+      local_scalar_t__ sigma_x = DUMMY_VAR__;
+      sigma_x = in__.read<local_scalar_t__>();
+      out__.write_free_lb(0.01, sigma_x);
       local_scalar_t__ intercept = DUMMY_VAR__;
       intercept = in__.read<local_scalar_t__>();
       out__.write(intercept);
@@ -535,8 +592,8 @@ class example_model final : public model_base_crtp<example_model> {
     
   inline void get_param_names(std::vector<std::string>& names__) const {
     
-    names__ = std::vector<std::string>{"x__missing", "y__missing",
-      "intercept", "slope", "error"};
+    names__ = std::vector<std::string>{"x__missing", "y__missing", "mu_x",
+      "sigma_x", "intercept", "slope", "error"};
     
     } // get_param_names() 
     
@@ -547,7 +604,7 @@ class example_model final : public model_base_crtp<example_model> {
                                                                    },
       std::vector<size_t>{static_cast<size_t>(N__y__missing)},
       std::vector<size_t>{}, std::vector<size_t>{}, std::vector<size_t>{
-      }};
+      }, std::vector<size_t>{}, std::vector<size_t>{}};
     
     } // get_dims() 
     
@@ -567,6 +624,8 @@ class example_model final : public model_base_crtp<example_model> {
         param_names__.emplace_back(std::string() + "y__missing" + '.' + std::to_string(sym1__));
       } 
     }
+    param_names__.emplace_back(std::string() + "mu_x");
+    param_names__.emplace_back(std::string() + "sigma_x");
     param_names__.emplace_back(std::string() + "intercept");
     param_names__.emplace_back(std::string() + "slope");
     param_names__.emplace_back(std::string() + "error");
@@ -596,6 +655,8 @@ class example_model final : public model_base_crtp<example_model> {
         param_names__.emplace_back(std::string() + "y__missing" + '.' + std::to_string(sym1__));
       } 
     }
+    param_names__.emplace_back(std::string() + "mu_x");
+    param_names__.emplace_back(std::string() + "sigma_x");
     param_names__.emplace_back(std::string() + "intercept");
     param_names__.emplace_back(std::string() + "slope");
     param_names__.emplace_back(std::string() + "error");
@@ -611,13 +672,13 @@ class example_model final : public model_base_crtp<example_model> {
     
   inline std::string get_constrained_sizedtypes() const {
     
-    return std::string("[{\"name\":\"x__missing\",\"type\":{\"name\":\"vector\",\"length\":" + std::to_string(N__x__missing) + "},\"block\":\"parameters\"},{\"name\":\"y__missing\",\"type\":{\"name\":\"vector\",\"length\":" + std::to_string(N__y__missing) + "},\"block\":\"parameters\"},{\"name\":\"intercept\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"slope\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"error\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"}]");
+    return std::string("[{\"name\":\"x__missing\",\"type\":{\"name\":\"vector\",\"length\":" + std::to_string(N__x__missing) + "},\"block\":\"parameters\"},{\"name\":\"y__missing\",\"type\":{\"name\":\"vector\",\"length\":" + std::to_string(N__y__missing) + "},\"block\":\"parameters\"},{\"name\":\"mu_x\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"sigma_x\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"intercept\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"slope\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"error\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"}]");
     
     } // get_constrained_sizedtypes() 
     
   inline std::string get_unconstrained_sizedtypes() const {
     
-    return std::string("[{\"name\":\"x__missing\",\"type\":{\"name\":\"vector\",\"length\":" + std::to_string(N__x__missing) + "},\"block\":\"parameters\"},{\"name\":\"y__missing\",\"type\":{\"name\":\"vector\",\"length\":" + std::to_string(N__y__missing) + "},\"block\":\"parameters\"},{\"name\":\"intercept\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"slope\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"error\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"}]");
+    return std::string("[{\"name\":\"x__missing\",\"type\":{\"name\":\"vector\",\"length\":" + std::to_string(N__x__missing) + "},\"block\":\"parameters\"},{\"name\":\"y__missing\",\"type\":{\"name\":\"vector\",\"length\":" + std::to_string(N__y__missing) + "},\"block\":\"parameters\"},{\"name\":\"mu_x\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"sigma_x\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"intercept\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"slope\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"},{\"name\":\"error\",\"type\":{\"name\":\"real\"},\"block\":\"parameters\"}]");
     
     } // get_unconstrained_sizedtypes() 
     
@@ -631,7 +692,7 @@ class example_model final : public model_base_crtp<example_model> {
                             const bool emit_generated_quantities = true,
                             std::ostream* pstream = nullptr) const {
       const size_t num_params__ = 
-  ((((N__x__missing + N__y__missing) + 1) + 1) + 1);
+  ((((((N__x__missing + N__y__missing) + 1) + 1) + 1) + 1) + 1);
       const size_t num_transformed = emit_transformed_parameters * 0;
       const size_t num_gen_quantities = emit_generated_quantities * 0;
       const size_t num_to_write = num_params__ + num_transformed +
@@ -651,7 +712,7 @@ class example_model final : public model_base_crtp<example_model> {
                             bool emit_generated_quantities = true,
                             std::ostream* pstream = nullptr) const {
       const size_t num_params__ = 
-  ((((N__x__missing + N__y__missing) + 1) + 1) + 1);
+  ((((((N__x__missing + N__y__missing) + 1) + 1) + 1) + 1) + 1);
       const size_t num_transformed = emit_transformed_parameters * 0;
       const size_t num_gen_quantities = emit_generated_quantities * 0;
       const size_t num_to_write = num_params__ + num_transformed +
@@ -691,10 +752,10 @@ class example_model final : public model_base_crtp<example_model> {
                               std::vector<int>& params_i,
                               std::vector<double>& vars,
                               std::ostream* pstream__ = nullptr) const {
-     constexpr std::array<const char*, 5> names__{"x__missing", "y__missing",
-      "intercept", "slope", "error"};
-      const std::array<Eigen::Index, 5> constrain_param_sizes__{N__x__missing
-       , N__y__missing, 1, 1, 1};
+     constexpr std::array<const char*, 7> names__{"x__missing", "y__missing",
+      "mu_x", "sigma_x", "intercept", "slope", "error"};
+      const std::array<Eigen::Index, 7> constrain_param_sizes__{N__x__missing
+       , N__y__missing, 1, 1, 1, 1, 1};
       const auto num_constrained_params__ = std::accumulate(
         constrain_param_sizes__.begin(), constrain_param_sizes__.end(), 0);
     
