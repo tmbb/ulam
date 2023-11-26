@@ -156,6 +156,13 @@ class FunctionCall(StanAstNode):
 
 
 @dataclass
+class DistributionCall(StanAstNode):
+    distribution: StanAstNode
+    arguments: StanAstNode
+    location: Optional[Location] = Location()
+
+
+@dataclass
 class Subscripts(StanAstNode):
     expression: StanAstNode
     indices: StanAstNode

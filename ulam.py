@@ -5,6 +5,8 @@ import hashlib
 import os
 from cmdstanpy import CmdStanModel
 import arviz
+import pandas
+import numpy
     
 from io import StringIO
 import pprint
@@ -18,6 +20,82 @@ INDENT_DELTA = 2
 LPDF_LIKE_SUFFIXES = [
     '_lpdf', '_lupdf', '_lpmf', '_lupmf', '_cdf', '_lcdf', '_lccdf'
 ]
+
+def wrap_in_list(x):
+    if isinstance(x, (list, tuple)):
+        return list(x)
+    else:
+        return [x]
+
+
+class UlamSeries:
+
+    def __init__(self, values):
+        indices = list(range(0, len(values)))
+        series = pandas.Series(values, index=indices)
+
+        N = len(series)
+        # Force conversion into 0 or 1
+        is_missing = series.isna() + 0
+
+        missing = series[series.isna()]
+        not_missing = series[~series.isna()]
+        index_for_datapoint = [-1 for _i in range(N)]
+
+        for (i, index) in enumerate(missing.index):
+            # Stan uses 1-based indexing!
+            index_for_datapoint[index] = i + 1
+        
+        for (i, index) in enumerate(not_missing.index):
+            # Stan uses 1-based indexing!
+            index_for_datapoint[index] = i + 1
+
+        # No NaN values remain in the array
+        # TODO: should we test this at runtime?
+        for value in index_for_datapoint:
+            assert value > -1
+
+        self.series = series
+        self.N = len(series)
+        self.missing_data_index = index_for_datapoint
+        self.is_missing = is_missing
+        self.missing = missing.values
+        self.N_missing = len(missing)
+        self.not_missing = not_missing.values
+        self.N_not_missing = len(not_missing)
+
+    def as_dict(self, variable_name):
+        var__N_missing = "N__{variable_name}__missing".format(variable_name=variable_name)
+        var__N_not_missing = "N__{variable_name}__not_missing".format(variable_name=variable_name)
+        var__is_missing = "{variable_name}__is_missing".format(variable_name=variable_name)
+        var__missing_data_index = "{variable_name}__missing_data_index".format(variable_name=variable_name)
+        var__missing = "{variable_name}__missing".format(variable_name=variable_name)
+        var__not_missing = "{variable_name}__not_missing".format(variable_name=variable_name)
+
+        return {
+            var__N_missing: self.N_missing,
+            var__N_not_missing: self.N_not_missing,
+            var__is_missing: self.is_missing.values,
+            var__missing_data_index: self.missing_data_index,
+            var__not_missing: self.not_missing
+        }
+
+    def __repr__(self):
+        header = """
+┌───────────────────────────┐
+│ UlamSeries                │
+├───────────────────────────┘
+│ \
+"""
+
+        footer = """
+└───────────────────────────
+"""
+
+        middle = "\n| ".join(repr(self.series).split("\n"))
+
+        return header + middle + footer
+
 
 @dataclass
 class StanProgram:
@@ -93,13 +171,13 @@ class StanProgram:
 
     def prewalk_blocks(self, acc, function):
         new_acc = acc
-        (self.functions, new_acc) = prewalk(self.functions, new_acc)
-        (self.data, new_acc) = prewalk(self.data, new_acc)
-        (self.transformed_data, new_acc) = prewalk(self.transformed_data, new_acc)
-        (self.parameters, new_acc) = prewalk(self.parameters, new_acc)
-        (self.transformed_parameters, new_acc) = prewalk(self.transformed_parameters, new_acc)
-        (self.model, new_acc) = prewalk(self.model, new_acc)
-        (self.generated_quantities, new_acc) = prewalk(self.generated_quantities, new_acc)
+        (self.functions, new_acc) = prewalk(self.functions, new_acc, function)
+        (self.data, new_acc) = prewalk(self.data, new_acc, function)
+        (self.transformed_data, new_acc) = prewalk(self.transformed_data, new_acc, function)
+        (self.parameters, new_acc) = prewalk(self.parameters, new_acc, function)
+        (self.transformed_parameters, new_acc) = prewalk(self.transformed_parameters, new_acc, function)
+        (self.model, new_acc) = prewalk(self.model, new_acc, function)
+        (self.generated_quantities, new_acc) = prewalk(self.generated_quantities, new_acc, function)
         
         return new_acc
 
@@ -155,16 +233,20 @@ def build_for_loops(statements):
             # Make sure the start and end of the loop match
             assert stmt.for_loop_id == enter_for_loop.for_loop_id
 
-            new_statement = ForLoop(
-                enter_for_loop.variable.ast_node,
-                enter_for_loop.lower.ast_node,
-                enter_for_loop.upper.ast_node,
-                Statements(for_loop_statements),
-                block=enter_for_loop.block
-            )
+            for_loops = []
+            for statement in for_loop_statements:
+                new_for_loop= ForLoop(
+                    enter_for_loop.variable.ast_node,
+                    enter_for_loop.lower.ast_node,
+                    enter_for_loop.upper.ast_node,
+                    statement,
+                    block=enter_for_loop.block
+                )
+
+                for_loops.append(new_for_loop)
 
             if stack == []:
-                parsed_statements.append(new_statement)
+                parsed_statements.extend(for_loops)
 
             else:
                 (enter_for_loop, for_loop_statements) = stack.pop()
@@ -303,6 +385,13 @@ def serialize_ast(ast_node, indent_level=0):
             serialize_ast(ast_node.right, indent_level)
         )
 
+    elif isinstance(ast_node, DistributionCall):
+        serialized_arguments = ", ".join(
+                (serialize_ast(arg, indent_level) for arg in ast_node.arguments)
+            )
+
+        return "{}({})".format(ast_node.function, serialized_arguments)
+
     elif isinstance(ast_node, FunctionCall):
         if any(ast_node.function.endswith(suffix) for suffix in LPDF_LIKE_SUFFIXES):
             arg1 = serialize_ast(ast_node.arguments[0])
@@ -359,8 +448,8 @@ def serialize_ast(ast_node, indent_level=0):
 
         serialized_body = whitespace_further_indented + serialize_ast(ast_node.body, indent_level + INDENT_DELTA)
 
-        return "\n{indent1}for ({variable} in {lower}:{upper}) {{\n{body}\n{indent2}}}".format(
-            indent1=whitespace,
+        return "for ({variable} in {lower}:{upper}) {{\n{body}\n{indent2}}}".format(
+            # indent1=whitespace,
             variable=serialize_ast(ast_node.variable, indent_level),
             lower=serialize_ast(ast_node.lower, indent_level),
             upper=serialize_ast(ast_node.upper, indent_level),
@@ -423,7 +512,6 @@ def prewalk(ast_node, acc, function):
 
         return function(new_for_loop, new_acc)
 
-
     elif isinstance(ast_node, FunctionCall):
         # Transform the arguments
         (new_arguments, new_acc) = map_reduce_prewalk_list(ast_node.arguments, new_acc, function)
@@ -443,6 +531,10 @@ def prewalk(ast_node, acc, function):
         # Now, apply the function to the intermeditate function call,
         # in which the function arguments have already been transformed.
         return function(new_increment_target, new_acc)
+    
+    elif isinstance(ast_node, Statements):
+        (new_stmts, new_acc) = map_reduce_prewalk_list(ast_node.statements, new_acc, function)
+        return function(Statements(statements=new_stmts), new_acc)
 
     elif isinstance(ast_node, Subscripts):
         (new_indices, new_acc) = map_reduce_prewalk_list(ast_node.indices, new_acc, function)
@@ -461,6 +553,15 @@ def prewalk(ast_node, acc, function):
         new_sample = Sample(left=new_left, right=new_right)
 
         return function(new_sample, acc)
+    
+    elif isinstance(ast_node, Assignment):
+        # Transform the left and right hand side (always keeping the accumulator)
+        (new_left, new_acc) = prewalk(ast_node.left, new_acc, function)
+        (new_right, new_acc) = prewalk(ast_node.right, new_acc, function)
+        # Build a new sampling statement
+        new_assignent = Assignment(left=new_left, right=new_right)
+
+        return function(new_assignent, acc)
 
     elif isinstance(ast_node, If):
         # Transform the condition and the branches (always keeping the accumulator)
@@ -488,7 +589,57 @@ def prewalk(ast_node, acc, function):
     else:
         raise Exception("Invalid ast node: {}".format(ast_node))
 
-def handle_missing_data(expression, subscripts):
+def is_subscripted_variable(ast_node):
+    return isinstance(ast_node, Subscripts) and isinstance(ast_node.expression, Variable)
+
+
+def handle_variables_with_missing_data_in_sampling_statements_and_assignments(
+        expression,
+        names_of_variables_with_missing_data):
+    
+    def handler(ast_node, acc):
+        if isinstance(ast_node, (Sample, Assignment)):
+            new_ast_node = handle_variables_with_missing_data(
+                ast_node,
+                names_of_variables_with_missing_data
+            )
+
+            return (new_ast_node, acc)
+
+        else:
+            return (ast_node, acc)
+            
+
+    (transformed_expression, _acc) = prewalk(expression, None, handler)
+
+    return transformed_expression
+
+
+
+def handle_variables_with_missing_data(expression, names_of_variables_with_missing_data):
+    def finder(ast_node, acc):
+        if (is_subscripted_variable(ast_node) and
+            ast_node.expression.name in names_of_variables_with_missing_data):
+
+            acc.append(ast_node)
+        
+        return (ast_node, acc)
+
+    subscripts_which_may_refer_to_missing_data = []
+    (_expression, subscripts_which_may_refer_to_missing_data) = prewalk(
+            expression,
+            subscripts_which_may_refer_to_missing_data,
+            finder
+        )
+
+    transformed_expression = expression
+    for subscripts in subscripts_which_may_refer_to_missing_data:
+        transformed_expression = handle_subscripts_with_missing_data(transformed_expression, subscripts)
+
+    return transformed_expression
+
+
+def handle_subscripts_with_missing_data(expression, subscripts):
     variable = subscripts.expression
     indices = subscripts.indices
 
@@ -531,8 +682,17 @@ def handle_missing_data(expression, subscripts):
         else:
             return (ast_node, acc)
 
-    (branch_if_datapoint_is_missing, _acc) = prewalk(expression, None, replace_variable_if_datapoint_is_missing)
-    (branch_if_datapoint_is_not_missing, _acc) = prewalk(expression, None, replace_variable_if_datapoint_is_not_missing)
+    (branch_if_datapoint_is_missing, _acc) = prewalk(
+        expression,
+        None,
+        replace_variable_if_datapoint_is_missing
+    )
+
+    (branch_if_datapoint_is_not_missing, _acc) = prewalk(
+        expression,
+        None,
+        replace_variable_if_datapoint_is_not_missing
+    )
 
     condition = Subscripts(
         expression=var__is_missing,
@@ -551,7 +711,7 @@ def decompose_missing_variable_declaration(variable_declaration):
     variable = variable_declaration.variable
     var_type = variable_declaration.type
 
-    if isinstance(var_type, Vector):
+    if isinstance(var_type, TypeVector):
         vector_lower = var_type.lower
         vector_upper = var_type.upper
         vector_dimension = var_type.dimension
@@ -768,7 +928,7 @@ def handle_predicted_variable(var_decl):
     var__hat = Variable(var_name + "__hat")
 
     stmt = VariableDeclaration(
-        variable=var__at,
+        variable=var__hat,
         group=VariableDeclarationGroup.GENERATED,
         type=var_decl.type
     )
@@ -785,6 +945,7 @@ class UlamModel(StanFunctionsLibrary):
         self.counter = 1
         self.variables = dict()
         self.variable_names = dict()
+        self.variables_with_missing_data = []
         self.functions = dict()
         self.statements = []
         self.program = StanProgram()
@@ -850,8 +1011,19 @@ class UlamModel(StanFunctionsLibrary):
 
     
     def sample(self, **kwargs):
+        raw_data = kwargs['data']
+
+        data = dict()
+        for (key, value) in raw_data.items():
+            if key in self.variables_with_missing_data:
+                ulam_series = UlamSeries(value)
+                data.update(ulam_series.as_dict(key))
+            else:
+                data[key] = value
+
+        kwargs['data'] = data
+        
         fit = self.model.sample(**kwargs)
-        data = kwargs['data']
 
         posterior_predictive = [
             (variable_name + '__hat') for variable_name in self.predicted_variables
@@ -883,10 +1055,10 @@ class UlamModel(StanFunctionsLibrary):
                 else:
                     sub_program = StanProgram(data=[stmt])
                     self.program.merge(sub_program)
-                
-                # if stmt.predict:
-                #     sub_program = handle_predicted_variable(stmt)
-                #     self.program.merge(sub_program)
+
+                if stmt.predict:
+                    sub_program = handle_predicted_variable(stmt)
+                    self.program.merge(sub_program)
 
             elif is_parameter_declaration(stmt):
                 sub_program = StanProgram(parameters=[stmt])
@@ -937,9 +1109,22 @@ class UlamModel(StanFunctionsLibrary):
                     StanProgram(data=[stmt])
                 )
 
+        self.variables_with_missing_data = variables_with_missing_data
+
         program_after_replacing_missing_data.merge_except_for_data_block(self.program)
         # Replace the program wiith the new version
         self.program = program_after_replacing_missing_data
+
+        def missing_values_handler(ast_node, acc):
+            new_ast_node = handle_variables_with_missing_data_in_sampling_statements_and_assignments(
+                ast_node,
+                variables_with_missing_data
+            )
+
+            return (new_ast_node, acc)
+        
+        # Handle references to missing values
+        self.program.prewalk_blocks(None, missing_values_handler)
 
     def _enter_for_loop(self, for_loop_id, variable, lower, upper, block):
         self.statements.append(EnterForLoop(for_loop_id, variable, lower, upper, block))
@@ -965,6 +1150,10 @@ class UlamModel(StanFunctionsLibrary):
 
     def put_variable(self, py_expr):
         self.variables[py_expr.id] = py_expr
+
+    def switch(self, condition, left, right):
+        if_stmt = If(condition=condition, then=left, otherwise=right, location=location)
+        return PyExpr(self, if_stmt)
 
     def data(self, name, type, missing_data=False, predict=False, log_likelihood=False):
         location = current_python_source_location()
@@ -1015,7 +1204,7 @@ class UlamModel(StanFunctionsLibrary):
 
         return self._maybe_logging('parameter', PyExpr(self, variable))
     
-    def range(self, variable_name, lower, upper, block=None):
+    def range(self, variable_name, lower, upper, block='model'):
         location = current_python_source_location()
         variable = Variable(variable_name, location=location)
         py_variable = PyExpr(self, variable)
@@ -1027,12 +1216,22 @@ class UlamModel(StanFunctionsLibrary):
         return ForLoopRangeIterator(self, py_variable, py_lower, py_upper, block=block, location=location)
         
     def vector(self, size, lower=None, upper=None, offset=None, multiplier=None):
+        location = current_python_source_location()
         return TypeVector(
             dimension=python_to_ast(size),
             lower=python_to_ast(lower),
             upper=python_to_ast(upper),
             offset=python_to_ast(offset),
-            multiplier=python_to_ast(multiplier)
+            multiplier=python_to_ast(multiplier),
+            location=location
+        )
+
+    def array(self, size, typ):
+        location = current_python_source_location()
+        return TypeArray(
+            dimensions=wrap_in_list(python_to_ast(size)),
+            type=python_to_ast(typ),
+            location=location
         )
 
     def increment_target(self, value):
