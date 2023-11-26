@@ -1057,12 +1057,6 @@ class UlamModel(StanFunctionsLibrary):
             dim = '{}__missing_dim_0'.format(key)
             coords_dict[dim] = ulam_series.missing_indices
 
-        # for (key, ulam_series) in missing_data_series.items():
-        #     for i in range(1, ulam_series.N_missing + 1):
-        #         var_name = '{}__missing[{}]'.format(key, i)
-        #         new_var_name = '{}[{}]'.format(key, i + 100)
-        #         rename_dict[var_name] = new_var_name
-
         inference_data = (
             inference_data
             .rename_vars(rename_dict)
