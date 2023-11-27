@@ -460,6 +460,7 @@ def serialize_ast(ast_node, indent_level=0):
             indent2=whitespace
         )
     
+
     elif isinstance(ast_node, BinOp):
         return "{} {} {}".format(
             serialize_ast(ast_node.left, indent_level),
@@ -499,10 +500,10 @@ def prewalk(ast_node, acc, function):
         return function(ast_node, new_acc)
     
     elif isinstance(ast_node, ForLoop):
-        (new_variable, new_acc) = function(ast_node.variable, new_acc)
-        (new_lower, new_acc) = function(ast_node.lower, new_acc)
-        (new_upper, new_acc) = function(ast_node.upper, new_acc)
-        (new_body, new_acc) = function(ast_node.body, new_acc)
+        (new_variable, new_acc) = prewalk(ast_node.variable, new_acc, function)
+        (new_lower, new_acc) = prewalk(ast_node.lower, new_acc, function)
+        (new_upper, new_acc) = prewalk(ast_node.upper, new_acc, function)
+        (new_body, new_acc) = prewalk(ast_node.body, new_acc, function)
 
         new_for_loop = ForLoop(
             variable=new_variable,
@@ -616,6 +617,94 @@ def handle_variables_with_missing_data_in_sampling_statements_and_assignments(
     (transformed_expression, _acc) = prewalk(expression, None, handler)
 
     return transformed_expression
+
+
+def abc1(expression, names_of_variables_with_missing_data):
+    def finder(ast_node, acc):
+        if (is_subscripted_variable(ast_node) and
+            ast_node.expression.name in names_of_variables_with_missing_data):
+
+            acc.append(ast_node)
+        
+        return (ast_node, acc)
+
+    subscripts_which_may_refer_to_missing_data = []
+    (_expression, subscripts_which_may_refer_to_missing_data) = prewalk(
+            expression,
+            subscripts_which_may_refer_to_missing_data,
+            finder
+        )
+
+    transformed_expression = expression
+    for subscripts in subscripts_which_may_refer_to_missing_data:
+        transformed_expression = abc2(transformed_expression, subscripts)
+
+    return transformed_expression
+
+
+def abc2(expression, subscripts):
+    variable = subscripts.expression
+    indices = subscripts.indices
+
+    var__is_missing = Variable("{}__is_missing".format(variable.name))
+    var__missing_data_index = Variable("{}__missing_data_index".format(variable.name))
+    var__missing = Variable("{}__missing".format(variable.name))
+    var__not_missing = Variable("{}__not_missing".format(variable.name))
+
+    def replace_variable_if_datapoint_is_missing(ast_node, acc):
+        if isinstance(ast_node, Subscripts) and ast_node.expression == variable:
+            new_ast_node = Subscripts(
+                expression=var__missing,
+                indices=[
+                    Subscripts(
+                        expression=var__missing_data_index,
+                        indices=ast_node.indices
+                    )
+                ]    
+            )
+
+            return (new_ast_node, acc)
+
+        else:
+            return (ast_node, acc)
+
+    def replace_variable_if_datapoint_is_not_missing(ast_node, acc):
+        if isinstance(ast_node, Subscripts) and ast_node.expression == variable:
+            new_ast_node = Subscripts(
+                expression=var__not_missing,
+                indices=[
+                    Subscripts(
+                        expression=var__missing_data_index,
+                        indices=ast_node.indices
+                    )
+                ]    
+            )
+
+            return (new_ast_node, acc)
+
+        else:
+            return (ast_node, acc)
+
+
+    (branch_if_datapoint_is_not_missing, _acc) = prewalk(
+        expression,
+        None,
+        replace_variable_if_datapoint_is_not_missing
+    )
+
+    condition = Subscripts(
+        expression=var__is_missing,
+        indices=indices
+    )
+
+    if_statement = If(
+        condition=condition,
+        then=Statements(statements=[]),
+        otherwise=branch_if_datapoint_is_not_missing
+    )
+
+    return if_statement
+
 
 
 
@@ -925,19 +1014,194 @@ def is_predicted_variable(stmt):
         stmt.predict == True
     )
 
+def one_dimensional_collection_size(typ):
+    if isinstance(typ, TypeVector):
+        return typ.dimension
+    
+    elif isinstance(typ, TypeArray):
+        # This function only works for one-dimensional arrays
+        assert len(typ.dimensions) == 1
+        return typ.dimensions[0]
 
 def handle_predicted_variable(var_decl):
-    var_name = var_decl.variable.name
-    var__hat = Variable(var_name + "__hat")
+    if var_decl.contains_missing_data:
+        var_name = var_decl.variable.name
+        dummy_var = Variable("{}__observed".format(var_name))
+        var = var_decl.variable
+        var__hat = Variable("{}__hat".format(var_name))
 
-    stmt = VariableDeclaration(
-        variable=var__hat,
-        group=VariableDeclarationGroup.GENERATED,
-        type=var_decl.type
+        generated_var_decl = VariableDeclaration(
+            variable=dummy_var,
+            group=VariableDeclarationGroup.GENERATED,
+            type=var_decl.type
+        )
+
+        i_subscript = Variable('i__0')
+        indices = [i_subscript]
+
+        assign_values_to_variable = ForLoop(
+            i_subscript,
+            lower=LitInt(1),
+            upper=one_dimensional_collection_size(var_decl.type),
+            body=Assignment(
+                left=Subscripts(dummy_var, indices),
+                right=Subscripts(var, indices)
+            ),
+            block='generated'
+        )
+
+        comment_header = Comment(
+            "// ------------------------------------------------------\n"
+            "// START of code generated for missing data\n"
+            "// ------------------------------------------------------"
+        )
+
+        comment_footer = Comment(
+            "// ------------------------------------------------------\n"
+            "// END of code generated for missing data\n"
+            "// ------------------------------------------------------"
+        )
+
+
+        stmts = Statements(
+            statements=[
+                comment_header,
+                generated_var_decl,
+                assign_values_to_variable,
+                comment_footer
+            ]
+        )
+
+        # Add the variable as a generated one
+        return StanProgram(generated_quantities=stmts)
+    
+    else:
+        # Empty stan program (merging with with it won't make a difference)
+        return StanProgram()
+
+def generate_predictor_and_log_lik_for_variable_with_missing_data(for_loop, variable, variable_dimension, variables_with_missing_data):
+    sample = for_loop.body
+    left = sample.left
+    function_call = sample.right
+
+    variable_dimension = Variable("{}__{}__not_missing".format(
+        variable_dimension.name,
+        variable.name
+    ))
+
+    var__is_missing = Variable(variable.name + "__is_missing", location=variable.location)
+    variable_missing_data_index = Variable(variable.name + "__missing_data_index")
+
+    var_not_missing = Variable(variable.name + "__not_missing", location=variable.location)
+
+    var_hat = Variable(variable.name + "__hat", location=variable.location)
+    var_log_lik = Variable(variable.name + "__log_lik", location=variable.location)
+
+    safe_var_not_missing_i = Subscripts(
+        var_not_missing,
+        [
+            Subscripts(
+                variable_missing_data_index,
+                left.indices
+            )
+        ],
+        location=left.location
     )
 
-    return StanProgram(generated_quantities=[stmt])
+    safe_var_hat_i = Subscripts(
+        var_hat,
+        [
+            Subscripts(
+                variable_missing_data_index,
+                left.indices
+            )
+        ],
+        location=left.location
+    )
 
+    safe_var_log_lik = Subscripts(
+        var_log_lik,
+        [
+            Subscripts(
+                variable_missing_data_index,
+                left.indices
+            )
+        ],
+        location=left.location
+    )
+
+    right_rng = FunctionCall(
+        function=function_call.function + "_rng",
+        arguments=function_call.arguments
+    )
+
+    right_lpdf = FunctionCall(
+        function=function_call.function + "_lpdf",
+        arguments=[safe_var_not_missing_i] + function_call.arguments
+    )
+
+    # TODO: FIX THIS!!!
+    var_decl_hat = VariableDeclaration(
+        variable=var_hat,
+        group=VariableDeclarationGroup.GENERATED,
+        type=TypeVector(dimension=variable_dimension),
+        location=variable.location
+    )
+
+    var_decl_log_lik = VariableDeclaration(
+        variable=var_log_lik,
+        group=VariableDeclarationGroup.GENERATED,
+        type=TypeVector(dimension=variable_dimension),
+        location=variable.location
+    )
+
+    assignment_hat = Assignment(
+        left=safe_var_hat_i,
+        right=right_rng
+    )
+
+    assignment_log_lik = Assignment(
+        left=safe_var_log_lik,
+        right=right_lpdf
+    )
+
+    transformed_assignment_hat = abc1(
+        assignment_hat,
+        variables_with_missing_data
+    )
+
+    transformed_assignment_log_lik = abc1(
+        assignment_log_lik,
+        variables_with_missing_data
+    )
+
+    condition = Subscripts(
+        expression=var__is_missing,
+        indices=left.indices
+    )
+
+    if_statement = If(
+        condition=condition,
+        then=Statements(statements=[]),
+        otherwise=Statements(statements=[
+            transformed_assignment_hat,
+            transformed_assignment_log_lik
+        ]),
+    )
+
+    new_for_loop = ForLoop(
+        variable=for_loop.variable,
+        lower=for_loop.lower,
+        upper=for_loop.upper,
+        body=if_statement,
+        location=for_loop.location
+    )
+
+    return [
+        var_decl_hat,
+        var_decl_log_lik,
+        new_for_loop
+    ]
 
 class UlamModel(StanFunctionsLibrary):
 
@@ -967,29 +1231,42 @@ class UlamModel(StanFunctionsLibrary):
         self.build_for_loops()
         
         # Inspect the generated AST and find the data variables we want to predict
-        self._get_and_store_data_pairs()
+        self._get_and_store_variable_metadata()
         # Divide the AST into the proper blocks to create the AST of a working stan program
         self._populate_stan_program()
         # Generate and compile the stan code
         self._setup_cmdstan_model()
 
-    def _get_and_store_data_pairs(self):
+    def _get_and_store_variable_metadata(self):
         # An iterator which will find all variables we want to predict
-        def reducer(ast_node, acc):
+        def predicted_variables_collector(ast_node, acc):
             if is_predicted_variable(ast_node):
+                acc.append((ast_node.variable.name, one_dimensional_collection_size(ast_node.type)))
+            return (ast_node, acc)
+
+        def missing_variable_finder(ast_node, acc):
+            if isinstance(ast_node, VariableDeclaration) and ast_node.contains_missing_data:
                 acc.append(ast_node.variable.name)
             return (ast_node, acc)
         
         # Gather the 
-        (_statements, predicted_variables) = prewalk(self.statements, [], reducer)
+        (_statements, predicted_variables) = prewalk(self.statements, [], predicted_variables_collector)
+        (_statements, variables_with_missing_data) = prewalk(self.statements, [], missing_variable_finder)
         
-        self.predicted_variables = predicted_variables
+        predicted_variable_dimensions = dict(predicted_variables)
+        predicted_variables = list(predicted_variable_dimensions.keys())
 
-        data_pairs = dict(
-            (variable_name, variable_name + '__hat') for variable_name in self.predicted_variables
-        )
+        data_pairs = dict()
+        for variable_name in predicted_variables:
+            if variable_name in variables_with_missing_data:
+                data_pairs[variable_name + "__not_missing"] = variable_name + "__hat"
+            else:
+                data_pairs[variable_name] = variable_name + "__hat"
 
         self.data_pairs = data_pairs
+        self.predicted_variable_dimensions = predicted_variable_dimensions
+        self.predicted_variables = predicted_variables
+        self.variables_with_missing_data = variables_with_missing_data
 
 
     def _setup_cmdstan_model(self):
@@ -1034,18 +1311,25 @@ class UlamModel(StanFunctionsLibrary):
         
         fit = self.model.sample(**kwargs)
 
-        posterior_predictive = [
-            (variable_name + '__hat') for variable_name in self.predicted_variables
-        ]
+        posterior_predictive = dict()
+        for variable_name in self.predicted_variables:
+            posterior_predictive[variable_name + "__not_missing"] = variable_name + "__hat"
 
-        observed_data = dict(
-            (variable_name, data[variable_name]) for variable_name in self.predicted_variables
-        )
+        observed_data = dict()
+        for variable_name in self.predicted_variables:
+            observed_data[variable_name + "__not_missing"] = data[variable_name + "__not_missing"]
+
+            
+        log_likelihood = dict()
+        for variable_name in self.predicted_variables:
+            log_likelihood[variable_name + "__not_missing"] = variable_name + "__log_lik"
+
 
         inference_data = arviz.from_cmdstanpy(
             posterior=fit,
             posterior_predictive=posterior_predictive,
-            observed_data=observed_data
+            observed_data=observed_data,
+            log_likelihood=log_likelihood
         )
 
         rename_dict = dict()
@@ -1065,9 +1349,31 @@ class UlamModel(StanFunctionsLibrary):
 
         return inference_data
     
+
     def plot_ppc(self, data, *args, **kwargs):
         data_pairs = kwargs.pop('data_pairs', self.data_pairs)
         return arviz.plot_ppc(data, *args, data_pairs=data_pairs, **kwargs)
+
+    def plot_loo_pit(self, data, variable, *args, **kwargs):
+        if variable in self.variables_with_missing_data:
+            var_y = variable + "__not_missing"
+            var_hat = variable + "__hat"
+        else:
+            var_y = variable
+            var_hat = variable + "__hat"
+
+        arviz.plot_loo_pit(data, *args, y=var_y, y_hat=var_hat, **kwargs)
+
+    def plot_khat(self, data, var_name=None, pointwise=True, **kwargs):
+        if var_name in self.variables_with_missing_data:
+            actual_var_name = var_name + "__not_missing"
+        else:
+            actual_var_name = var_name
+        
+
+        loo = arviz.loo(data, var_name=actual_var_name, pointwise=pointwise)
+        arviz.plot_khat(loo, **kwargs)
+        return loo
 
     def _populate_stan_program(self):
         for stmt in self.statements:
@@ -1080,9 +1386,9 @@ class UlamModel(StanFunctionsLibrary):
                     sub_program = StanProgram(data=[stmt])
                     self.program.merge(sub_program)
 
-                if stmt.predict:
-                    sub_program = handle_predicted_variable(stmt)
-                    self.program.merge(sub_program)
+                # if stmt.predict:
+                #     sub_program = handle_predicted_variable(stmt)
+                #     self.program.merge(sub_program)
 
             elif is_parameter_declaration(stmt):
                 sub_program = StanProgram(parameters=[stmt])
@@ -1110,8 +1416,7 @@ class UlamModel(StanFunctionsLibrary):
             
             else:
                 raise Exception("Statement not supported at the top-level")
-            
-        
+
         # An iterator which will find all variables with missing data
         def reducer(ast_node, acc):
             if is_data_declaration(ast_node) and ast_node.contains_missing_data:
@@ -1119,7 +1424,7 @@ class UlamModel(StanFunctionsLibrary):
             return (ast_node, acc)
         
         (_statements, variables_with_missing_data) = prewalk(self.program.data.statements, [], reducer)
-        
+    
         program_after_replacing_missing_data = StanProgram()
 
         for stmt in self.program.data.statements:
@@ -1132,6 +1437,45 @@ class UlamModel(StanFunctionsLibrary):
                 program_after_replacing_missing_data.merge(
                     StanProgram(data=[stmt])
                 )
+
+            
+        def for_loop_collector(ast_node, acc):
+            if isinstance(ast_node, ForLoop) and isinstance(ast_node.body, Sample):
+                for_loop = ast_node
+                sample = ast_node.body
+                left = sample.left
+                right = sample.right
+
+                if (isinstance(left, Subscripts) and
+                    isinstance(left.expression, Variable) and
+                    isinstance(right, FunctionCall)):
+
+                    variable = left.expression
+
+                    if variable.name in self.predicted_variables:
+                        if variable.name in self.variables_with_missing_data:
+                            variable_dimension = self.predicted_variable_dimensions[variable.name]
+                            statements = generate_predictor_and_log_lik_for_variable_with_missing_data(
+                                for_loop,
+                                variable,
+                                variable_dimension,
+                                variables_with_missing_data
+                            )
+
+                            acc.extend(statements)
+                
+                else:
+                    # Not implemented
+                    pass
+
+            return (ast_node, acc)
+
+
+        (_model, transformed_for_loops) = prewalk(self.program.model, [], for_loop_collector)
+
+        generated_quantities_sub_program = StanProgram(
+            generated_quantities=Statements(statements=transformed_for_loops)
+        )
 
         self.variables_with_missing_data = variables_with_missing_data
 
@@ -1147,14 +1491,19 @@ class UlamModel(StanFunctionsLibrary):
 
             return (new_ast_node, acc)
         
-        # Handle references to missing values
+        # Handle references to missing values;
+        # Note that this will spare the dummy variables we've generated!
         self.program.prewalk_blocks(None, missing_values_handler)
+        self.program.merge(generated_quantities_sub_program)
+
 
     def _enter_for_loop(self, for_loop_id, variable, lower, upper, block):
         self.statements.append(EnterForLoop(for_loop_id, variable, lower, upper, block))
 
+
     def _exit_for_loop(self, for_loop_id):
         self.statements.append(ExitForLoop(for_loop_id))
+
 
     def build_for_loops(self):
         statements = build_for_loops(self.statements)
